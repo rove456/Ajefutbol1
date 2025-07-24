@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="manifest" href="manifest.json">
+    <meta charset="UTF-8">
+    <title>Custom Chess Game Creator</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+.capture-move {
+    cursor: pointer;
+    position: relative;
+}
+
+.capture-move::before {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: rgba(255, 0, 0, 0.5);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.red-cards-container {
+    margin: 20px 0;
+    padding: 15px;
+    background-color: #3b3b3b;
+    border-radius: 4px;
+}
+
+.red-cards-container label {
+    display: block;
+    margin-bottom: 10px;
+    color: #fff;
+    font-weight: bold;
+}
+
+.red-cards-select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    background-color: #2b2b2b;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.red-cards-select:hover {
+    background-color: #363636;
+}
+
+.red-cards-select option {
+    background-color: #2b2b2b;
+    color: #fff;
+}
+        #main-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        #sidebar {
+            width: calc(200px + 5cm);
+            background-color: #2b2b2b;
+            color: #fff;
+            padding: 20px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #game-info {
+            background-color: #2b2b2b;
+            color: #fff;
+            padding: 15px;
+            text-align: left;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        #turn-indicator {
+            background-color: #2b2b2b;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .turn-green {
+            color: #4caf50;
+        }
+
+        .turn-red {
+            color: #ff5555;
+        }
+
+        #sidebar h2, #sidebar h3, #sidebar h4 {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        #pieces {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            flex-grow: 1;
+        }
+
+        .piece-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .piece {
+            width: 100px;
+            height: 100px;
+            cursor: grab;
+        }
+
+        .piece.selected {
+            box-shadow: 0 0 10px 3px #ffd700;
+        }
+
+        .valid-move {
+            cursor: pointer;
+            position: relative;
+        }
+
+        .valid-move::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.3);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .game-button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s, opacity 0.3s;
+        }
+        #restart-game {
+            background-color: #ff5722;
+            color: white;
+        }
+
+        #restart-game:hover:not(:disabled) {
+            background-color: #f4511e;
+        }
+
+        #start-game {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        #start-game:hover:not(:disabled) {
+            background-color: #45a049;
+        }
+
+        .game-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        #board-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            padding: 20px;
+        }
+
+        #zoom-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            justify-content: center;
+            padding: 10px;
+            background-color: #2b2b2b;
+        }
+
+        #zoom-controls button {
+            width: 40px;
+            height: 40px;
+            background-color: #444;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        #zoom-controls button:hover {
+            background-color: #555;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(7, minmax(40px, 60px));
+            grid-template-rows: repeat(12, minmax(40px, 60px));
+            border: 2px solid #444;
+            background-color: #444;
+            transform-origin: center center;
+            transition: transform 0.2s;
+        }
+
+        .square {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .light {
+            background-color: #ffeb3b;
+        }
+
+        .dark {
+            background-color: #4caf50;
+        }
+
+        .square img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .coords-top-left {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 12px;
+            color: #222;
+        }
+
+        .coords-bottom-right {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            font-size: 12px;
+            color: #222;
+        }
+
+        @media (max-width: 768px) {
+            #sidebar {
+                width: 250px;
+            }
+
+            #board {
+                grid-template-columns: repeat(7, minmax(30px, 40px));
+                grid-template-rows: repeat(12, minmax(30px, 40px));
+            }
+
+            .piece {
+                width: 80px;
+                height: 80px;
+            }
+        }
+    </style>
+</head>
+
+
+
+<body>
+    <div id="game-info">
+        Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): 2025-04-26 12:16:38
+        Current User's Login: rove456
+    </div>
+    <div id="turn-indicator" style="display: none;">
+        Current Turn: <span id="current-turn" class="turn-green">Green Team</span>
+    </div>
+    <div id="main-container">
+        <div id="sidebar">
+            <h2>Select Pieces</h2>
+            <div id="pieces"></div>
+            <button id="restart-game" class="game-button">Restart Game</button>
+            <button id="start-game" class="game-button" disabled>Start Game</button>
+        </div>
+        <div id="zoom-controls">
+            <button id="zoom-in">+</button>
+            <button id="zoom-out">−</button>
+        </div>
+        <div id="board-container">
+            <div id="board"></div>
+        </div>
+    </div>
+<script>
+    const board = document.getElementById('board');
+    const columns = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
+    const sidebar = document.getElementById('pieces');
+    let zoomLevel = 1;
+    let isGameStarted = false;
+    let currentTurn = 'green';
+    let selectedPiece = null;
+    let validMoves = new Set();
+    let defenderFirstMoves = new Set();
+let capturesUsed = {
+    'green': 0,
+    'red': 0
+};
+
+let capturedPieces = {
+    'green': [],
+    'red': []
+};
+
+
+    const pieceImages = [];
+    for (let i = 1; i <= 11; i++) {
+        pieceImages.push(`greenshirt.${i}.png`);
+        pieceImages.push(`redshirt.${i}.png`);
+    }
+
+    const pieceSet = new Set();
+    
+    const requiredPieces = {
+        'greenshirt': {
+            'Goalkeeper': 1,
+            'Defenders': 5,
+            'Midfielders': 2,
+            'Wingers': 2,
+            'Forward': 1
+        },
+        'redshirt': {
+            'Goalkeeper': 1,
+            'Defenders': 5,
+            'Midfielders': 2,
+            'Wingers': 2,
+            'Forward': 1
+        }
+    };
+
+   function getValidMoves(piece, square) {
+    const moves = new Set();
+    const position = square.dataset.position;
+    const col = position.charAt(0);
+    const row = parseInt(position.substring(1));
+    const [team, number] = piece.getAttribute('data-file').split('.');
+    const pieceNum = parseInt(number);
+
+    // Helper function to check if a square is occupied
+    const isSquareOccupied = (col, row) => {
+        const targetSquare = document.querySelector(`[data-position="${col}${row}"]`);
+        const piece = targetSquare && targetSquare.querySelector('.piece');
+        if (piece) {
+            const [occupyingTeam] = piece.getAttribute('data-file').split('.');
+            return { occupied: true, team: occupyingTeam, piece: piece };
+        }
+        return { occupied: false, team: null, piece: null };
+    };
+
+   // Update the isPathClear function
+const isPathClear = (startCol, startRow, endCol, endRow) => {
+    const colStep = Math.sign(columns.indexOf(endCol) - columns.indexOf(startCol));
+    const rowStep = Math.sign(endRow - startRow);
+
+    let currentCol = startCol;
+    let currentRow = startRow;
+
+    // Move one step at a time and check each square
+    while (true) {
+        // Update position
+        if (currentCol !== endCol) {
+            currentCol = columns[columns.indexOf(currentCol) + colStep];
+        }
+        if (currentRow !== endRow) {
+            currentRow += rowStep;
+        }
+
+        // Break if we reach the target square
+        if (currentCol === endCol && currentRow === endRow) {
+            break;
+        }
+
+        // Check if the square is occupied
+        const targetSquare = document.querySelector(`[data-position="${currentCol}${currentRow}"]`);
+        if (targetSquare && targetSquare.querySelector('.piece')) {
+            return false; // Path is obstructed
+        }
+    }
+
+    return true; // Path is clear
+};
+
+// Modify the addMove function inside getValidMoves
+const addMove = (col, row) => {
+    if (row >= 0 && row <= 11) {
+        const colIndex = columns.indexOf(col);
+        if (colIndex !== -1) {
+            const squareStatus = isSquareOccupied(col, row);
+            
+            // Skip adding moves if the path to the target square is not clear
+            if (!isPathClear(position.charAt(0), parseInt(position.substring(1)), col, row)) {
+                return;
+            }
+
+            // Special case for goal areas
+            if (row === 0 || row === 11) {
+                if ((team === 'greenshirt' && row === 0) || (team === 'redshirt' && row === 11)) {
+                    if (['C', 'D', 'E'].includes(col) && !squareStatus.occupied) {
+                        moves.add(`${col}${row}`);
+                    }
+                    return;
+                }
+                if (pieceNum !== 1) {
+                    return;
+                }
+            }
+
+            // Handle normal moves and captures
+            if (!squareStatus.occupied) {
+                moves.add(`${col}${row}`);
+            } else if (squareStatus.team !== team) { // Enemy piece
+                const redCards = parseInt(document.getElementById('red-cards-select').value);
+                const currentTeamColor = team === 'greenshirt' ? 'green' : 'red';
+                if (capturesUsed[currentTeamColor] < redCards) {
+                    moves.add(`${col}${row}:capture`);
+                }
+            }
+        }
+    }
+};
+
+        // Goalkeeper movement (piece number 1)
+if (pieceNum === 1) {
+    const currentColIndex = columns.indexOf(col);
+    const goalColumns = ['C', 'D', 'E'];
+    
+    if (team === 'greenshirt') {
+        // Allow goalkeeper to move between rows 10 and 11
+        if (row === 11) {
+            // Can move forward, sideways, and diagonally within goal area
+            addMove(col, 10);  // Move forward
+            // Check lateral and diagonal movements in row 11
+            goalColumns.forEach(goalCol => {
+                if (goalCol !== col) {
+                    addMove(goalCol, 11);  // Lateral movement
+                    addMove(goalCol, 10);  // Diagonal movement forward
+                }
+            });
+        } else if (row === 10) {
+            addMove(col, 11);  // Move back to goal line
+            // Check lateral and diagonal movements in row 10
+            goalColumns.forEach(goalCol => {
+                if (goalCol !== col) {
+                    addMove(goalCol, 10);  // Lateral movement
+                    addMove(goalCol, 11);  // Diagonal movement backward
+                }
+            });
+        }
+    } else if (team === 'redshirt') {
+        // Allow goalkeeper to move between rows 0 and 1
+        if (row === 0) {
+            // Can move forward, sideways, and diagonally within goal area
+            addMove(col, 1);  // Move forward
+            // Check lateral and diagonal movements in row 0
+            goalColumns.forEach(goalCol => {
+                if (goalCol !== col) {
+                    addMove(goalCol, 0);  // Lateral movement
+                    addMove(goalCol, 1);  // Diagonal movement forward
+                }
+            });
+        } else if (row === 1) {
+            addMove(col, 0);  // Move back to goal line
+            // Check lateral and diagonal movements in row 1
+            goalColumns.forEach(goalCol => {
+                if (goalCol !== col) {
+                    addMove(goalCol, 1);  // Lateral movement
+                    addMove(goalCol, 0);  // Diagonal movement backward
+                }
+            });
+        }
+    }
+}
+        // Defenders movement (piece numbers 2-6)
+       else if (pieceNum >= 2 && pieceNum <= 6) {
+// Defenders movement
+        const isFirstMove = !defenderFirstMoves.has(piece.getAttribute('data-file'));
+        const directions = [
+            { dc: 0, dr: team === 'greenshirt' ? -1 : 1 },
+            { dc: 0, dr: team === 'greenshirt' ? 1 : -1 },
+            { dc: 1, dr: 0 },
+            { dc: -1, dr: 0 }
+        ];
+        
+        directions.forEach(({ dc, dr }) => {
+            const colIndex = columns.indexOf(col);
+            // One square movement
+            const newCol = columns[colIndex + dc];
+            if (newCol) {
+                const newRow = row + dr;
+                addMove(newCol, newRow);
+            }
+            
+            // Two squares movement on first move
+            if (isFirstMove) {
+                const newCol2 = columns[colIndex + dc * 2];
+                if (newCol2) {
+                    const newRow = row + dr * 2;
+                    addMove(newCol2, newRow);
+                }
+            }
+        });
+
+}
+        // Midfielders movement (piece numbers 7-8)
+        else if (pieceNum === 7 || pieceNum === 8) {
+            const directions = [
+                { dc: 0, dr: 1 },  // forward
+                { dc: 0, dr: -1 }, // backward
+                { dc: 1, dr: 0 },  // right
+                { dc: -1, dr: 0 }  // left
+            ];
+            
+            directions.forEach(({ dc, dr }) => {
+                const colIndex = columns.indexOf(col);
+                // One and two blocks movement
+                for (let i = 1; i <= 2; i++) {
+                    const newCol = columns[colIndex + dc * i];
+                    if (newCol) {
+                        addMove(newCol, row + dr * i);
+                    }
+                }
+            });
+        }
+        // Wingers movement (piece numbers 9 and 11)
+        else if (pieceNum === 9 || pieceNum === 11) {
+            const directions = [
+                { dc: 1, dr: 1 },   // diagonal forward right
+                { dc: -1, dr: 1 },  // diagonal forward left
+                { dc: 1, dr: -1 },  // diagonal backward right
+                { dc: -1, dr: -1 }  // diagonal backward left
+            ];
+            
+            directions.forEach(({ dc, dr }) => {
+                const colIndex = columns.indexOf(col);
+                // One and two blocks movement
+                for (let i = 1; i <= 2; i++) {
+                    const newCol = columns[colIndex + dc * i];
+                    if (newCol) {
+                        addMove(newCol, row + dr * i);
+                    }
+                }
+            });
+        }
+        // Forward movement (piece number 10)
+        else if (pieceNum === 10) {
+            const directions = [
+                { dc: 0, dr: 1 },   // forward
+                { dc: 0, dr: -1 },  // backward
+                { dc: 1, dr: 0 },   // right
+                { dc: -1, dr: 0 },  // left
+                { dc: 1, dr: 1 },   // diagonal forward right
+                { dc: -1, dr: 1 },  // diagonal forward left
+                { dc: 1, dr: -1 },  // diagonal backward right
+                { dc: -1, dr: -1 }  // diagonal backward left
+            ];
+            
+            directions.forEach(({ dc, dr }) => {
+                const colIndex = columns.indexOf(col);
+                // One and two blocks movement
+                for (let i = 1; i <= 2; i++) {
+                    const newCol = columns[colIndex + dc * i];
+                    if (newCol) {
+                        addMove(newCol, row + dr * i);
+                    }
+                }
+            });
+        }
+
+        return moves;
+    }
+    // Game state and UI management functions
+    function updateGameState() {
+        const dateTimeElement = document.getElementById('game-info');
+        const now = new Date();
+        const formattedDate = now.toISOString().replace('T', ' ').slice(0, 19);
+        dateTimeElement.innerHTML = `
+            Current Date and Time (UTC - YYYY-MM-DD HH:MM:SS formatted): ${formattedDate}<br>
+            Current User's Login: rove456
+        `;
+    }
+
+    function highlightValidMoves(moves) {
+    // Clear previous highlights
+    document.querySelectorAll('.square').forEach(square => {
+        square.style.backgroundColor = '';
+        square.classList.remove('valid-move', 'capture-move');
+    });
+
+    // Add highlights for valid moves
+    moves.forEach(move => {
+        const isCapture = move.includes(':capture');
+        const position = isCapture ? move.split(':')[0] : move;
+        const square = document.querySelector(`[data-position="${position}"]`);
+        if (square) {
+            square.classList.add(isCapture ? 'capture-move' : 'valid-move');
+            // Different colors for normal moves and captures
+            const isLight = square.classList.contains('light');
+            if (isCapture) {
+                square.style.backgroundColor = 'rgba(255, 0, 0, 0.5)'; // Red for captures
+            } else {
+                square.style.backgroundColor = isLight ? 
+                    'rgba(255, 235, 59, 0.7)' : 'rgba(76, 175, 80, 0.7)';
+            }
+        }
+    });
+}
+
+    function clearHighlights() {
+    selectedPiece = null;
+    validMoves.clear();
+    document.querySelectorAll('.square').forEach(square => {
+        square.style.backgroundColor = '';
+        square.classList.remove('valid-move', 'capture-move');
+    });
+}
+
+function addMove(col, row) {
+    if (row >= 0 && row <= 11) {
+        const colIndex = columns.indexOf(col);
+        if (colIndex !== -1) {
+            const squareStatus = isSquareOccupied(col, row);
+            
+            // Special case for goal areas
+            if (row === 0 || row === 11) {
+                if ((team === 'greenshirt' && row === 0) || (team === 'redshirt' && row === 11)) {
+                    if (['C', 'D', 'E'].includes(col) && !squareStatus.occupied) {
+                        moves.add(`${col}${row}`);
+                    }
+                    return;
+                }
+                if (pieceNum !== 1) {
+                    return;
+                }
+            }
+
+            // Handle normal moves and captures
+            if (!squareStatus.occupied) {
+                moves.add(`${col}${row}`);
+            } else if (squareStatus.team !== team) { // Enemy piece
+                const redCards = parseInt(document.getElementById('red-cards-select').value);
+                const currentTeamColor = team === 'greenshirt' ? 'green' : 'red';
+                if (capturesUsed[currentTeamColor] < redCards) {
+                    moves.add(`${col}${row}:capture`);
+                }
+            }
+        }
+    }
+}
+
+   function switchTurn() {
+    currentTurn = currentTurn === 'green' ? 'red' : 'green';
+    const turnSpan = document.getElementById('current-turn');
+    turnSpan.textContent = currentTurn === 'green' ? 'Green Team' : 'Red Team';
+    turnSpan.className = currentTurn === 'green' ? 'turn-green' : 'turn-red';
+    console.log('Turn switched to:', currentTurn);
+}
+
+    // Event handlers
+function handlePieceClick(event) {
+    if (!isGameStarted) return;
+
+    const piece = event.target;
+    const [team] = piece.getAttribute('data-file').split('.');
+    const isCurrentTeam = (team === 'greenshirt' && currentTurn === 'green') ||
+                         (team === 'redshirt' && currentTurn === 'red');
+
+    // Validate turn only for moves, not for selection
+    if (!isCurrentTeam) {
+        // Silently ignore if it's not the current player's turn
+        return;
+    }
+
+    if (selectedPiece === piece) {
+        // Deselect the piece
+        clearHighlights();
+        piece.classList.remove('selected');
+        selectedPiece = null;
+    } else {
+        // Clear previous selection
+        if (selectedPiece) {
+            selectedPiece.classList.remove('selected');
+        }
+        clearHighlights();
+
+        // Select new piece
+        selectedPiece = piece;
+        piece.classList.add('selected');
+        const square = piece.closest('.square');
+        validMoves = getValidMoves(piece, square);
+        highlightValidMoves(validMoves);
+    }
+}
+
+
+// Add this helper function
+function addPieceClickHandler(piece) {
+    piece.addEventListener('click', handlePieceClick);
+}
+
+// Add this helper function
+function addPieceClickHandler(piece) {
+    piece.addEventListener('click', handlePieceClick);
+}
+
+// Final fix for handleSquareClick
+function handleSquareClick(event) {
+    if (!isGameStarted || !selectedPiece) return;
+
+    const targetSquare = event.target.closest('.square');
+    if (!targetSquare) return;
+
+    const targetPosition = targetSquare.dataset.position;
+    const isCapture = Array.from(validMoves).some(move =>
+        move.startsWith(targetPosition) && move.includes(':capture')
+    );
+
+    // Check if the click is on the selected piece itself (no action needed)
+    if (selectedPiece && targetSquare.contains(selectedPiece)) {
+        return; // Ignore clicks on the selected piece
+    }
+
+    // Validate turn before processing any move or capture
+    const pieceFile = selectedPiece.getAttribute('data-file');
+    const [team] = pieceFile.split('.');
+    const currentTeamColor = team === 'greenshirt' ? 'green' : 'red';
+
+    // Ignore invalid actions silently if it's not the current turn
+    if (currentTeamColor !== currentTurn) {
+        return; // Do nothing if it's not the player's turn
+    }
+
+    // Check if the clicked square is a valid move or capture
+    if (validMoves.has(targetPosition) || validMoves.has(`${targetPosition}:capture`)) {
+        // Handle capture
+        if (isCapture) {
+            const capturedPiece = targetSquare.querySelector('.piece');
+            if (capturedPiece) {
+                const [capturedTeam] = capturedPiece.getAttribute('data-file').split('.');
+                capturedPieces[currentTeamColor].push(capturedPiece);
+                capturesUsed[currentTeamColor]++;
+
+                // Remove the captured piece from the board
+                capturedPiece.parentNode.removeChild(capturedPiece);
+            }
+        }
+
+        // Track defender's first move
+        const pieceNum = parseInt(pieceFile.split('.')[1]);
+        if (pieceNum >= 2 && pieceNum <= 6) {
+            defenderFirstMoves.add(pieceFile);
+        }
+
+        // Move the piece
+        selectedPiece.classList.remove('selected');
+        targetSquare.innerHTML = '';
+        targetSquare.appendChild(selectedPiece);
+
+        // Clear highlights immediately after move
+        clearHighlights();
+
+        // Check for winner
+        const winner = checkWinner(targetSquare, team);
+        if (winner) {
+            isGameStarted = false;
+            const winnerTeam = winner === 'green' ? 'Green' : 'Red';
+            alert(`${winnerTeam} team wins! Game Over!`);
+
+            document.querySelectorAll('.piece').forEach(piece => {
+                piece.removeEventListener('click', handlePieceClick);
+            });
+
+            const startButton = document.getElementById('start-game');
+            startButton.textContent = 'Game Over';
+            document.getElementById('turn-indicator').style.display = 'none';
+            return;
+        }
+
+        // Switch turns and clear selection
+        switchTurn();
+        selectedPiece = null;
+
+        // Stop event propagation to prevent duplicate validations
+        event.stopPropagation();
+    }
+}
+
+
+// Update the start-game event listener to use the helper function
+document.getElementById('start-game').addEventListener('click', () => {
+    if (checkAllPiecesPlaced()) {
+        isGameStarted = true;
+        const startButton = document.getElementById('start-game');
+        startButton.disabled = true;
+        startButton.textContent = 'Game In Progress';
+        
+        // Initialize turn display
+        currentTurn = 'green';
+        document.getElementById('turn-indicator').style.display = 'block';
+        const turnSpan = document.getElementById('current-turn');
+        turnSpan.textContent = 'Green Team';
+        turnSpan.className = 'turn-green';
+        
+        initializeBoard();
+        
+        // Add click handlers to pieces using the helper function
+        document.querySelectorAll('.piece').forEach(piece => {
+            addPieceClickHandler(piece);
+        });
+        
+        alert('Game has started! Green team goes first.');
+    }
+});
+    function initializeBoard() {
+        // Clear existing event listeners
+        document.querySelectorAll('.square').forEach(square => {
+            square.replaceWith(square.cloneNode(true));
+        });
+        
+        // Add new event listeners
+        document.querySelectorAll('.square').forEach(square => {
+            square.addEventListener('click', handleSquareClick);
+        });
+    }
+    function createSidebar() {
+        sidebar.innerHTML = '';
+        const teams = ['greenshirt', 'redshirt'];
+        const roles = {
+            'Goalkeeper': [1],
+            'Defenders': [2, 3, 4, 5, 6],
+            'Midfielders': [7, 8],
+            'Wingers': [9, 11],
+            'Forward': [10]
+        };
+
+        teams.forEach(team => {
+            const teamDiv = document.createElement('div');
+            const teamTitle = document.createElement('h3');
+            teamTitle.textContent = team.includes('green') ? 'Green Team' : 'Red Team';
+            teamDiv.appendChild(teamTitle);
+
+            Object.entries(roles).forEach(([role, nums]) => {
+                const roleTitle = document.createElement('h4');
+                roleTitle.textContent = role;
+                teamDiv.appendChild(roleTitle);
+
+                const group = document.createElement('div');
+                group.className = 'piece-group';
+
+                nums.forEach(num => {
+                    const file = `${team}.${num}.png`;
+                    if (!pieceSet.has(file)) {
+                        const img = document.createElement('img');
+                        img.src = `pieces/${file}`;
+                        img.className = 'piece';
+                        img.setAttribute('data-file', file);
+                        img.draggable = true;
+                        img.addEventListener('dragstart', drag);
+                        group.appendChild(img);
+                    }
+                });
+
+                teamDiv.appendChild(group);
+            });
+
+            sidebar.appendChild(teamDiv);
+        });
+
+ // Add red cards dropdown
+    const redCardsContainer = document.createElement('div');
+    redCardsContainer.className = 'red-cards-container';
+
+    const redCardsLabel = document.createElement('label');
+    redCardsLabel.textContent = 'Red Cards';
+    redCardsContainer.appendChild(redCardsLabel);
+
+    const redCardsSelect = document.createElement('select');
+    redCardsSelect.className = 'red-cards-select';
+    redCardsSelect.id = 'red-cards-select'; // Add an ID for easy access
+    
+    // Add options from 0 to 8
+    for (let i = 0; i <= 8; i++) {
+        const option = document.createElement('option');
+        option.value = i;
+        option.textContent = i;
+        redCardsSelect.appendChild(option);
+    }
+
+    redCardsContainer.appendChild(redCardsSelect);
+    sidebar.appendChild(redCardsContainer);
+// Continue with the existing button creation code...
+    const restartButton = document.createElement('button');
+    // ... rest of the existing code ...
+
+
+    }
+
+    function isGoalArea(square, team) {
+        const position = square.dataset.position;
+        const col = position.charAt(0);
+        const row = parseInt(position.substring(1));
+        
+        if (team === 'greenshirt') {
+            return row === 11 && (col === 'C' || col === 'D' || col === 'E');
+        } else if (team === 'redshirt') {
+            return row === 0 && (col === 'C' || col === 'D' || col === 'E');
+        }
+        return false;
+    }
+
+    function isValidPlacement(square, team, isGoalkeeper) {
+        const row = parseInt(square.dataset.position.substring(1));
+        
+        if (isGoalkeeper) {
+            return isGoalArea(square, team);
+        }
+        
+        if (team === 'greenshirt') {
+            return row >= 7; // Green pieces can only be placed on rows 7-11
+        } else if (team === 'redshirt') {
+            return row <= 5; // Red pieces can only be placed on rows 1-5
+        }
+        return false;
+    }
+
+    function checkAllPiecesPlaced() {
+        const placedPieces = {
+            'greenshirt': {
+                'Goalkeeper': 0,
+                'Defenders': 0,
+                'Midfielders': 0,
+                'Wingers': 0,
+                'Forward': 0
+            },
+            'redshirt': {
+                'Goalkeeper': 0,
+                'Defenders': 0,
+                'Midfielders': 0,
+                'Wingers': 0,
+                'Forward': 0
+            }
+        };
+
+        document.querySelectorAll('.square img').forEach(img => {
+            const file = img.getAttribute('data-file');
+            const [team, number] = file.split('.');
+            const num = parseInt(number);
+            
+            if (num === 1) placedPieces[team]['Goalkeeper']++;
+            else if (num >= 2 && num <= 6) placedPieces[team]['Defenders']++;
+            else if (num === 7 || num === 8) placedPieces[team]['Midfielders']++;
+            else if (num === 9 || num === 11) placedPieces[team]['Wingers']++;
+            else if (num === 10) placedPieces[team]['Forward']++;
+        });
+
+        for (const team in requiredPieces) {
+            for (const role in requiredPieces[team]) {
+                if (placedPieces[team][role] !== requiredPieces[team][role]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    // Drag and Drop handlers
+    function drag(event) {
+        if (isGameStarted) {
+            event.preventDefault();
+            return;
+        }
+        event.dataTransfer.setData('text/plain', event.target.getAttribute('data-file'));
+    }
+
+    function allowDrop(event) {
+        event.preventDefault();
+    }
+
+    function drop(event) {
+        event.preventDefault();
+        if (isGameStarted) return;
+        
+        const data = event.dataTransfer.getData('text/plain');
+        const square = event.target.closest('.square');
+        if (!square) return;
+
+        const [team, number] = data.split('.');
+        const isGoalkeeper = number === '1';
+        
+        if (!isValidPlacement(square, team, isGoalkeeper)) {
+            if (isGoalkeeper) {
+                alert(`${team.includes('green') ? 'Green' : 'Red'} goalkeeper must be placed in the goal area.`);
+            } else {
+                alert(`${team.includes('green') ? 'Green' : 'Red'} pieces must be placed on their respective side of the board.`);
+            }
+            return;
+        }
+
+        square.innerHTML = '';
+        const img = document.createElement('img');
+        img.src = `pieces/${data}`;
+        img.className = 'piece';
+        img.setAttribute('data-file', data);
+        img.draggable = true;
+        img.addEventListener('dragstart', drag);
+        img.addEventListener('click', function() {
+            if (isGameStarted) return;
+            square.innerHTML = '';
+            pieceSet.delete(data);
+            createSidebar();
+            document.getElementById('start-game').disabled = true;
+        });
+
+        square.appendChild(img);
+        pieceSet.add(data);
+        createSidebar();
+
+        document.getElementById('start-game').disabled = !checkAllPiecesPlaced();
+    }
+
+	function restartGame() {
+    // Clear the board - remove all pieces and their event listeners
+    document.querySelectorAll('.square').forEach(square => {
+        const piece = square.querySelector('.piece');
+        if (piece) {
+            // Remove all event listeners from the piece
+            const newPiece = piece.cloneNode(true);
+            piece.parentNode.removeChild(piece);
+            square.innerHTML = '';
+        }
+        
+
+	 // Reset capture-related state
+    capturesUsed = 0;
+    capturedPieces = { 'green': [], 'red': [] };
+
+	
+        // Reattach coordinates if needed
+        const position = square.dataset.position;
+        if (position) {
+            const col = position.charAt(0);
+            const row = parseInt(position.substring(1));
+            
+            // Add column coordinates
+            if (row === 10) {
+                const coord = document.createElement('div');
+                coord.className = 'coords-bottom-right';
+                coord.textContent = col;
+                square.appendChild(coord);
+            }
+            
+            // Add row coordinates
+            if (col === 'A' && row > 0 && row < 11) {
+                const coord = document.createElement('div');
+                coord.className = 'coords-top-left';
+                coord.textContent = row;
+                square.appendChild(coord);
+            }
+        }
+    });
+    
+    // Reset game state variables
+    isGameStarted = false;
+    currentTurn = 'green';
+    selectedPiece = null;
+    validMoves.clear();
+    defenderFirstMoves.clear();
+    pieceSet.clear();
+    
+    // Reset buttons
+    const startButton = document.getElementById('start-game');
+    startButton.disabled = true;
+    startButton.textContent = 'Start Game';
+    
+    // Hide turn indicator
+    document.getElementById('turn-indicator').style.display = 'none';
+    const turnSpan = document.getElementById('current-turn');
+    turnSpan.textContent = 'Green Team';
+    turnSpan.className = 'turn-green';
+    
+    // Reset event listeners for squares
+    document.querySelectorAll('.square').forEach(square => {
+        const newSquare = square.cloneNode(true);
+        square.parentNode.replaceChild(newSquare, square);
+        newSquare.addEventListener('dragover', allowDrop);
+        newSquare.addEventListener('drop', drop);
+    });
+    
+    // Clear all highlights
+    clearHighlights();
+    
+    // Recreate sidebar with all pieces
+    createSidebar();
+  // Reset red cards dropdown
+    const redCardsSelect = document.getElementById('red-cards-select');
+    if (redCardsSelect) {
+        redCardsSelect.value = '0';
+    }
+
+}
+
+function checkWinner(targetSquare, team) {
+    const position = targetSquare.dataset.position;
+    const col = position.charAt(0);
+    const row = parseInt(position.substring(1));
+    
+    // Check if green team reached red's goal area (row 0)
+    if (team === 'greenshirt' && row === 0 && (col === 'C' || col === 'D' || col === 'E')) {
+        return 'green';
+    }
+    
+    // Check if red team reached green's goal area (row 11)
+    if (team === 'redshirt' && row === 11 && (col === 'C' || col === 'D' || col === 'E')) {
+        return 'red';
+    }
+    
+    return null;
+}
+
+
+    // Create the board
+    for (let row = 0; row < 12; row++) {
+        for (let col = 0; col < 7; col++) {
+            const isExtraRow = (row === 0 || row === 11);
+            const isInPlayableCols = (col >= 2 && col <= 4);
+            if (isExtraRow && !isInPlayableCols) {
+                const emptyCell = document.createElement('div');
+                board.appendChild(emptyCell);
+                continue;
+            }
+            const square = document.createElement('div');
+            square.classList.add('square');
+            square.classList.add((row + col) % 2 === 0 ? 'light' : 'dark');
+            const displayRow = 11 - row;
+            square.dataset.position = columns[col] + displayRow;
+            square.addEventListener('dragover', allowDrop);
+            square.addEventListener('drop', drop);
+
+            if (col === 0 && row > 0 && row < 11) {
+                const coord = document.createElement('div');
+                coord.className = 'coords-top-left';
+                coord.textContent = displayRow;
+                square.appendChild(coord);
+            }
+            if (row === 10) {
+                const coord = document.createElement('div');
+                coord.className = 'coords-bottom-right';
+                coord.textContent = columns[col];
+                square.appendChild(coord);
+            }
+
+            board.appendChild(square);
+        }
+    }
+
+    // Initialize event listeners
+    document.getElementById('zoom-in').addEventListener('click', () => {
+        zoomLevel += 0.1;
+        board.style.transform = `scale(${zoomLevel})`;
+    });
+
+    document.getElementById('zoom-out').addEventListener('click', () => {
+        zoomLevel = Math.max(0.5, zoomLevel - 0.1);
+        board.style.transform = `scale(${zoomLevel})`;
+    });
+
+    document.getElementById('restart-game').addEventListener('click', () => {
+        if (isGameStarted || pieceSet.size > 0) {
+            if (confirm('Are you sure you want to restart the game? All pieces will be returned to the sidebar.')) {
+                restartGame();
+            }
+        }
+    });
+
+    document.getElementById('start-game').addEventListener('click', () => {
+    if (checkAllPiecesPlaced()) {
+        isGameStarted = true;
+        const startButton = document.getElementById('start-game');
+        startButton.disabled = true;
+        startButton.textContent = 'Game In Progress';
+        
+        // Initialize turn display
+        currentTurn = 'green';
+        document.getElementById('turn-indicator').style.display = 'block';
+        const turnSpan = document.getElementById('current-turn');
+        turnSpan.textContent = 'Green Team';
+        turnSpan.className = 'turn-green';
+        
+        initializeBoard();
+        
+        // Add click handlers to pieces
+        document.querySelectorAll('.piece').forEach(piece => {
+            piece.addEventListener('click', handlePieceClick);
+        });
+        
+        
+    }
+});
+
+    // Initial setup
+    createSidebar();
+    setInterval(updateGameState, 1000);
+
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./service-worker.js')
+      .then(reg => console.log('SW registered!', reg))
+      .catch(err => console.error('SW registration failed:', err));
+  }
+</script>
+
+
+</body>
+</html>
