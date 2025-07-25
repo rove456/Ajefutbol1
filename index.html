@@ -245,6 +245,14 @@
         #zoom-controls button:hover {
             background-color: #555;
         }
+	    #controls-column {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20px 10px 0 10px;
+  min-width: 80px;
+  background: none;
+}
 
         #board {
             display: grid;
@@ -328,13 +336,16 @@
     <button id="start-game" class="game-button" disabled>Start Game</button>
 </div>
 	    
-        <div id="zoom-controls">
-            <button id="zoom-in">+</button>
-            <button id="zoom-out">−</button>
-        </div>
-
-	    <button id="toggle-sidebar" class="game-button" style="margin-top: 10px;">Hide Sidebar</button>
+      <!-- GROUP CONTROLS IN A COLUMN -->
+  <div id="controls-column">
+    <div id="zoom-controls">
+      <button id="zoom-in">+</button>
+      <button id="zoom-out">−</button>
+    </div>
+    <button id="toggle-sidebar" class="game-button" style="margin-top: 10px;">Hide Sidebar</button>
     <button id="show-sidebar-btn" class="game-button" style="margin-top:10px; display:none;">Show Sidebar</button>
+  </div>
+
         <div id="board-container">
             <div id="board"></div>
         </div>
