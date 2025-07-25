@@ -90,7 +90,7 @@
         }
 
         #sidebar {
-		<button id="toggle-sidebar" class="game-button" style="margin-bottom:15px;">Hide Sidebar</button>
+		
             width: calc(200px + 5cm);
             background-color: #2b2b2b;
             color: #fff;
@@ -321,12 +321,14 @@
         Current Turn: <span id="current-turn" class="turn-green">Green Team</span>
     </div>
     <div id="main-container">
-        <div id="sidebar">
-            <h2>Select Pieces</h2>
-            <div id="pieces"></div>
-            <button id="restart-game" class="game-button">Restart Game</button>
-            <button id="start-game" class="game-button" disabled>Start Game</button>
-        </div>
+     <div id="sidebar">
+    <button id="toggle-sidebar" class="game-button" style="margin-bottom:15px;">Hide Sidebar</button>
+    <h2>Select Pieces</h2>
+    <div id="pieces"></div>
+    <button id="restart-game" class="game-button">Restart Game</button>
+    <button id="start-game" class="game-button" disabled>Start Game</button>
+</div>
+	    
         <div id="zoom-controls">
             <button id="zoom-in">+</button>
             <button id="zoom-out">−</button>
