@@ -129,6 +129,7 @@
             width: 100px;
             height: 100px;
             cursor: grab;
+		 touch-action: none; /* <--- Add this line */
         }
 
         .piece.selected {
@@ -1088,47 +1089,50 @@ addTouchHandlers(img);
     document.getElementById('start-game').disabled = !checkAllPiecesPlaced();
 }
 function addTouchHandlers(img) {
-    let startX, startY;
+    let ghost = null;
 
     img.addEventListener('touchstart', function(e) {
         if (isGameStarted) return;
-        startX = e.touches[0].clientX;
-        startY = e.touches[0].clientY;
-        img.style.position = 'absolute';
-        img.style.zIndex = 1000;
-        document.body.appendChild(img);
-        moveAt(startX, startY);
         e.preventDefault();
+
+        // Create ghost image
+        ghost = img.cloneNode(true);
+        ghost.style.position = 'fixed';
+        ghost.style.pointerEvents = 'none';
+        ghost.style.opacity = '0.7';
+        ghost.style.zIndex = 9999;
+        ghost.style.width = img.offsetWidth + 'px';
+        ghost.style.height = img.offsetHeight + 'px';
+        document.body.appendChild(ghost);
+
+        moveGhost(e.touches[0].clientX, e.touches[0].clientY);
     });
 
     img.addEventListener('touchmove', function(e) {
-        if (isGameStarted) return;
-        let touch = e.touches[0];
-        moveAt(touch.clientX, touch.clientY);
+        if (!ghost) return;
         e.preventDefault();
+        moveGhost(e.touches[0].clientX, e.touches[0].clientY);
     });
 
     img.addEventListener('touchend', function(e) {
-        if (isGameStarted) return;
-        img.style.position = '';
-        img.style.zIndex = '';
+        if (!ghost) return;
+        e.preventDefault();
+        ghost.remove();
+
         let touch = e.changedTouches[0];
-        img.hidden = true;
         let elem = document.elementFromPoint(touch.clientX, touch.clientY);
-        img.hidden = false;
         let square = elem && elem.closest('.square');
         if (square) {
             handlePieceDrop(img.getAttribute('data-file'), square);
-        } else {
-            // If not dropped on square, return to sidebar or original place
-            img.remove();
+            // Remove the original img (from sidebar) since it is now placed
+            if (img.parentNode) img.parentNode.removeChild(img);
         }
-        e.preventDefault();
+        ghost = null;
     });
 
-    function moveAt(clientX, clientY) {
-        img.style.left = clientX - img.width / 2 + 'px';
-        img.style.top = clientY - img.height / 2 + 'px';
+    function moveGhost(x, y) {
+        ghost.style.left = (x - ghost.offsetWidth / 2) + 'px';
+        ghost.style.top = (y - ghost.offsetHeight / 2) + 'px';
     }
 }
 	
