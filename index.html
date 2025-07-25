@@ -1349,7 +1349,7 @@ function checkWinner(targetSquare, team) {
       .catch(err => console.error('SW registration failed:', err));
   }
 // Sidebar toggle logic
-const sidebar = document.getElementById('sidebar');
+const sidebarEl = document.getElementById('sidebar'); // The whole sidebar
 const toggleSidebarBtn = document.getElementById('toggle-sidebar');
 
 // Create "Show Sidebar" button
@@ -1359,12 +1359,11 @@ showSidebarBtn.textContent = 'Show Sidebar';
 document.body.appendChild(showSidebarBtn);
 
 toggleSidebarBtn.addEventListener('click', function() {
-    sidebar.classList.add('hidden');
+    sidebarEl.classList.add('hidden');
     showSidebarBtn.style.display = 'block';
 });
-
 showSidebarBtn.addEventListener('click', function() {
-    sidebar.classList.remove('hidden');
+    sidebarEl.classList.remove('hidden');
     showSidebarBtn.style.display = 'none';
 });
 	
