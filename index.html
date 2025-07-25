@@ -887,6 +887,7 @@ document.getElementById('start-game').addEventListener('click', () => {
                         img.setAttribute('data-file', file);
                         img.draggable = true;
                         img.addEventListener('dragstart', drag);
+			   addTouchHandlers(img); // <-- Add this line
                         group.appendChild(img);
                     }
                 });
@@ -1013,6 +1014,7 @@ document.getElementById('start-game').addEventListener('click', () => {
         
         const data = event.dataTransfer.getData('text/plain');
         const square = event.target.closest('.square');
+	        handlePieceDrop(data, square);
         if (!square) return;
 
         const [team, number] = data.split('.');
@@ -1048,7 +1050,47 @@ document.getElementById('start-game').addEventListener('click', () => {
 
         document.getElementById('start-game').disabled = !checkAllPiecesPlaced();
     }
+function handlePieceDrop(data, targetSquare) {
+    if (isGameStarted) return;
+    if (!targetSquare) return;
 
+    const [team, number] = data.split('.');
+    const isGoalkeeper = number === '1';
+
+    if (!isValidPlacement(targetSquare, team, isGoalkeeper)) {
+        if (isGoalkeeper) {
+            alert(`${team.includes('green') ? 'Green' : 'Red'} goalkeeper must be placed in the goal area.`);
+        } else {
+            alert(`${team.includes('green') ? 'Green' : 'Red'} pieces must be placed on their respective side of the board.`);
+        }
+        return;
+    }
+
+    targetSquare.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = `pieces/${data}`;
+    img.className = 'piece';
+    img.setAttribute('data-file', data);
+    img.draggable = true;
+    img.addEventListener('dragstart', drag);
+
+    img.addEventListener('click', function() {
+        if (isGameStarted) return;
+        targetSquare.innerHTML = '';
+        pieceSet.delete(data);
+        createSidebar();
+        document.getElementById('start-game').disabled = true;
+    });
+
+    addTouchHandlers(img); // <-- add touch handlers to new piece
+
+    targetSquare.appendChild(img);
+    pieceSet.add(data);
+    createSidebar();
+
+    document.getElementById('start-game').disabled = !checkAllPiecesPlaced();
+}
+	
 	function restartGame() {
     // Clear the board - remove all pieces and their event listeners
     document.querySelectorAll('.square').forEach(square => {
@@ -1073,6 +1115,51 @@ document.getElementById('start-game').addEventListener('click', () => {
             const row = parseInt(position.substring(1));
             
             // Add column coordinates
+		// --- TOUCH SUPPORT FOR MOBILE DEVICES ---
+function addTouchHandlers(img) {
+    let startX, startY;
+
+    img.addEventListener('touchstart', function(e) {
+        if (isGameStarted) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        img.style.position = 'absolute';
+        img.style.zIndex = 1000;
+        document.body.appendChild(img);
+        moveAt(startX, startY);
+        e.preventDefault();
+    });
+
+    img.addEventListener('touchmove', function(e) {
+        if (isGameStarted) return;
+        let touch = e.touches[0];
+        moveAt(touch.clientX, touch.clientY);
+        e.preventDefault();
+    });
+
+    img.addEventListener('touchend', function(e) {
+        if (isGameStarted) return;
+        img.style.position = '';
+        img.style.zIndex = '';
+        let touch = e.changedTouches[0];
+        img.hidden = true;
+        let elem = document.elementFromPoint(touch.clientX, touch.clientY);
+        img.hidden = false;
+        let square = elem && elem.closest('.square');
+        if (square) {
+            handlePieceDrop(img.getAttribute('data-file'), square);
+        } else {
+            // If not dropped on square, return to sidebar or original place
+            img.remove();
+        }
+        e.preventDefault();
+    });
+
+    function moveAt(clientX, clientY) {
+        img.style.left = clientX - img.width / 2 + 'px';
+        img.style.top = clientY - img.height / 2 + 'px';
+    }
+}
             if (row === 10) {
                 const coord = document.createElement('div');
                 coord.className = 'coords-bottom-right';
