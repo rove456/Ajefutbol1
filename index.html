@@ -724,10 +724,6 @@ function handlePieceClick(event) {
 }
 
 
-// Add this helper function
-function addPieceClickHandler(piece) {
-    piece.addEventListener('click', handlePieceClick);
-}
 
 // Add this helper function
 function addPieceClickHandler(piece) {
@@ -1036,6 +1032,7 @@ document.getElementById('start-game').addEventListener('click', () => {
         img.setAttribute('data-file', data);
         img.draggable = true;
         img.addEventListener('dragstart', drag);
+	    addTouchHandlers(img);
         img.addEventListener('click', function() {
             if (isGameStarted) return;
             square.innerHTML = '';
@@ -1073,7 +1070,7 @@ function handlePieceDrop(data, targetSquare) {
     img.setAttribute('data-file', data);
     img.draggable = true;
     img.addEventListener('dragstart', drag);
-
+addTouchHandlers(img);
     img.addEventListener('click', function() {
         if (isGameStarted) return;
         targetSquare.innerHTML = '';
@@ -1090,32 +1087,6 @@ function handlePieceDrop(data, targetSquare) {
 
     document.getElementById('start-game').disabled = !checkAllPiecesPlaced();
 }
-	
-	function restartGame() {
-    // Clear the board - remove all pieces and their event listeners
-    document.querySelectorAll('.square').forEach(square => {
-        const piece = square.querySelector('.piece');
-        if (piece) {
-            // Remove all event listeners from the piece
-            const newPiece = piece.cloneNode(true);
-            piece.parentNode.removeChild(piece);
-            square.innerHTML = '';
-        }
-        
-
-	 // Reset capture-related state
-    capturesUsed = 0;
-    capturedPieces = { 'green': [], 'red': [] };
-
-	
-        // Reattach coordinates if needed
-        const position = square.dataset.position;
-        if (position) {
-            const col = position.charAt(0);
-            const row = parseInt(position.substring(1));
-            
-            // Add column coordinates
-		// --- TOUCH SUPPORT FOR MOBILE DEVICES ---
 function addTouchHandlers(img) {
     let startX, startY;
 
@@ -1160,6 +1131,33 @@ function addTouchHandlers(img) {
         img.style.top = clientY - img.height / 2 + 'px';
     }
 }
+	
+	function restartGame() {
+    // Clear the board - remove all pieces and their event listeners
+    document.querySelectorAll('.square').forEach(square => {
+        const piece = square.querySelector('.piece');
+        if (piece) {
+            // Remove all event listeners from the piece
+            const newPiece = piece.cloneNode(true);
+            piece.parentNode.removeChild(piece);
+            square.innerHTML = '';
+        }
+        
+
+	 // Reset capture-related state
+    capturesUsed = 0;
+    capturedPieces = { 'green': [], 'red': [] };
+
+	
+        // Reattach coordinates if needed
+        const position = square.dataset.position;
+        if (position) {
+            const col = position.charAt(0);
+            const row = parseInt(position.substring(1));
+            
+            // Add column coordinates
+		// --- TOUCH SUPPORT FOR MOBILE DEVICES ---
+
             if (row === 10) {
                 const coord = document.createElement('div');
                 coord.className = 'coords-bottom-right';
