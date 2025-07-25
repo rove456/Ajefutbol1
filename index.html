@@ -322,7 +322,6 @@
     </div>
     <div id="main-container">
      <div id="sidebar">
-    <button id="toggle-sidebar" class="game-button" style="margin-bottom:15px;">Hide Sidebar</button>
     <h2>Select Pieces</h2>
     <div id="pieces"></div>
     <button id="restart-game" class="game-button">Restart Game</button>
@@ -333,6 +332,9 @@
             <button id="zoom-in">+</button>
             <button id="zoom-out">−</button>
         </div>
+
+	    <button id="toggle-sidebar" class="game-button" style="margin-top: 10px;">Hide Sidebar</button>
+    <button id="show-sidebar-btn" class="game-button" style="margin-top:10px; display:none;">Show Sidebar</button>
         <div id="board-container">
             <div id="board"></div>
         </div>
@@ -1349,15 +1351,10 @@ function checkWinner(targetSquare, team) {
       .catch(err => console.error('SW registration failed:', err));
   }
 // Sidebar toggle logic
-const sidebarEl = document.getElementById('sidebar'); // The whole sidebar
+const sidebarEl = document.getElementById('sidebar');
 const toggleSidebarBtn = document.getElementById('toggle-sidebar');
-
-// Create "Show Sidebar" button
-const showSidebarBtn = document.createElement('button');
-showSidebarBtn.id = 'show-sidebar-btn';
-showSidebarBtn.textContent = 'Show Sidebar';
-document.body.appendChild(showSidebarBtn);
-
+const showSidebarBtn = document.getElementById('show-sidebar-btn');
+	
 toggleSidebarBtn.addEventListener('click', function() {
     sidebarEl.classList.add('hidden');
     showSidebarBtn.style.display = 'block';
